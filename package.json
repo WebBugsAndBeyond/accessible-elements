@@ -1,0 +1,25 @@
+{
+  "name": "accessible-decorator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build:src": "tsc --project tsconfig.json",
+    "build:tests": "tsc --project tsconfig.tests.json",
+    "clean:build": "rm -rf ./build",
+    "clean:test": "rm -rf ./tests-build",
+    "test": "jest --config=jest.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "typescript": "^5.8.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
