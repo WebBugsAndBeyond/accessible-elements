@@ -146,4 +146,9 @@ describe('makeAccessibleBreadcrumbs function', () => {
         expect(anchorElement).not.toBeNull();
         expect(anchorElement?.getAttribute('aria-current')).toEqual('page');
     });
+    it('uses a default view model.', () => {
+        const breadcrumbsElement: Element = createElement();
+        const madeAccessibleBreadcrumbs: Element = makeAccessibleBreadcrumbs(breadcrumbsElement);
+        expect(madeAccessibleBreadcrumbs).toBe(breadcrumbsElement);
+    });
 });
