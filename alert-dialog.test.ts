@@ -95,6 +95,15 @@ describe('AccessibleAlertDialogViewModel class', () => {
         );
         expect(mockDialogViewModel.isModal).toEqual(isModal);
     });
+    it('initiates an instance with default values with its static createDefault factory function.', () => {
+        const instance: AccessibleAlertDialogViewModel = AccessibleAlertDialogViewModel.createDefault();
+        expect(instance.selectors).toBeDefined();
+        expect(instance.selectors).toBeInstanceOf(AlertDialogElementSelectorSet);
+        expect(instance.isModal).toBeDefined();
+        expect(typeof instance.isModal).toEqual('boolean');
+        expect(instance.labelViewModel).toBeDefined();
+        expect(instance.labelViewModel).toBeInstanceOf(AccessibleElementLabelViewModel);
+    });
 });
 
 describe('makeAccessibleAlertDialog function', () => {
@@ -228,5 +237,10 @@ describe('makeAccessibleAlertDialog function', () => {
             mockDialogViewModel,
         );
         expect(alertDialogElement.getAttribute('aria-modal')).toEqual('true');
+    });
+    it('uses a default view model.', () => {
+        const alertElement: Element = createElement();
+        const madeAccessibleAlert: Element = makeAccessibleAlertDialog(alertElement);
+        expect(madeAccessibleAlert.getAttribute('role')).toEqual(AccessibleAlertDialogViewModel.DIALOG_ROLE_NAME);
     });
 });
