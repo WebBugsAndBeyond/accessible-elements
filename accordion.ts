@@ -30,9 +30,9 @@ export class AccordionElementSelectorSet {
 
 export function targetElementIsToggleButton(eventTarget: EventTarget | null): boolean {
     const element: HTMLElement = eventTarget as HTMLElement;
-    const isButton: boolean = element?.getAttribute?.('role') === 'button';
-    const isControl: boolean = element?.hasAttribute?.('aria-controls');
-    const isExpandButton: boolean = element?.hasAttribute?.('aria-expanded');
+    const isButton: boolean = element.getAttribute('role') === 'button';
+    const isControl: boolean = element.hasAttribute('aria-controls');
+    const isExpandButton: boolean = element.hasAttribute('aria-expanded');
     return isButton && isControl && isExpandButton;
 }
 
@@ -45,8 +45,8 @@ export function createAccordionKeyboardNavigationKeyUpHandler(
         if (targetElementIsToggleButton(target)) {
             const toggles: Node[] = Array.from(accordionElement.querySelectorAll(selectors.toggleButtonSelector));
             if (key === ' ' || key === 'Enter') {
-                (target as HTMLElement)?.click();
-            } else if (toggles.length > 0 && (key === 'ArrowUp' || key === 'ArrowDown')) {
+                (target as HTMLElement).click();
+            } else if (key === 'ArrowUp' || key === 'ArrowDown') {
                 const direction: number = ({ 'ArrowUp': -1, 'ArrowDown': 1 })[key];
                 const targetIndex: number | undefined = toggles.findIndex(node => node === target);
                 if (typeof targetIndex !== 'undefined') {
@@ -59,10 +59,16 @@ export function createAccordionKeyboardNavigationKeyUpHandler(
                     const nextElement: HTMLElement = toggles[nextIndex] as HTMLElement;
                     nextElement.focus();
                 }
-            } else if (key === 'Home' && toggles.length > 0) {
+            } else if (key === 'Home') {
                 (toggles[0] as HTMLElement).focus();
-            } else if (key === 'End' && toggles.length > 0) {
+                (toggles[0] as EventTarget).dispatchEvent(new FocusEvent('focus', {
+                    bubbles: true,
+                }));
+            } else if (key === 'End') {
                 (toggles[toggles.length - 1] as HTMLElement).focus();
+                (toggles[toggles.length - 1] as EventTarget).dispatchEvent(new FocusEvent('focus', {
+                    bubbles: true,
+                }));
             }
             e.preventDefault();
             e.stopPropagation();
@@ -93,13 +99,13 @@ export function makeAccessibleAccordion(
         const toggleId: string = ensureElementHasID(toggleElement);
         const wrapperId: string = ensureElementHasID(contentWrapper);
 
-        toggleElement?.setAttribute?.('role', 'button');
-        toggleElement?.setAttribute?.('aria-controls', wrapperId);
-        toggleElement?.setAttribute?.('aria-expanded', 'false');
+        toggleElement.setAttribute('role', 'button');
+        toggleElement.setAttribute('aria-controls', wrapperId);
+        toggleElement.setAttribute('aria-expanded', 'false');
 
-        contentWrapper?.setAttribute?.('role', 'region');
-        contentWrapper?.setAttribute?.('aria-labelledby', toggleId);
-        contentWrapper?.setAttribute?.('hidden', '');
+        contentWrapper.setAttribute('role', 'region');
+        contentWrapper.setAttribute('aria-labelledby', toggleId);
+        contentWrapper.setAttribute('hidden', '');
 
         toggleExpandedHiddenState(toggleElement, contentWrapper);
     }
