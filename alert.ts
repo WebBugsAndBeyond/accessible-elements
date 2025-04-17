@@ -6,6 +6,6 @@
  * @returns Returns alertElement
  */
 export function makeAccessibleAlert(alertElement: Element): Element {
-    alertElement?.setAttribute?.('role', 'alert');
+    alertElement.setAttribute('role', 'alert');
     return alertElement;
 }
