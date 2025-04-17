@@ -35,21 +35,14 @@ export class AccessibleAlertDialogViewModel extends AccessibleElementViewModel<A
 
     public constructor(
         public readonly selectors: AlertDialogElementSelectorSet = AlertDialogElementSelectorSet.createDefault(),
-        public readonly labelViewModel: AccessibleElementLabelViewModel,
+        public readonly labelViewModel: AccessibleElementLabelViewModel = AccessibleElementLabelViewModel.createDefault(),
         public readonly isModal: boolean = true,
     ) {
        super(selectors, labelViewModel); 
     }
 
     public static createDefault(): AccessibleAlertDialogViewModel {
-        const selectors: AlertDialogElementSelectorSet = AlertDialogElementSelectorSet.createDefault();
-        const labelViewModel: AccessibleElementLabelViewModel = AccessibleElementLabelViewModel.createDefault();
-        const isModal: boolean = true;
-        return new AccessibleAlertDialogViewModel(
-            selectors,
-            labelViewModel,
-            isModal,
-        );
+        return new AccessibleAlertDialogViewModel();
     }
 }
 
@@ -66,10 +59,10 @@ export function makeAccessibleAlertDialog(
     dialogElement: Element,
     viewModel: AccessibleAlertDialogViewModel = AccessibleAlertDialogViewModel.createDefault(),
 ): Element {
-    const { selectors, labelViewModel, isModal = true } = viewModel;
+    const { selectors, labelViewModel, isModal } = viewModel;
     AccessibleElementLabelViewModel.applyAccessibleLabel(dialogElement, labelViewModel);
     applyDescribedBy(dialogElement, selectors.descriptionSelector);
     dialogElement.setAttribute('role', AccessibleAlertDialogViewModel.DIALOG_ROLE_NAME);
-    dialogElement.setAttribute('aria-modal', isModal ? 'true' : 'false');    
+    dialogElement.setAttribute('aria-modal', `${isModal}`);
     return dialogElement;
 }
