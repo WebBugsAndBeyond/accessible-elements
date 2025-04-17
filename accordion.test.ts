@@ -185,6 +185,13 @@ import {
         (toggleButton as HTMLElement).click();
         expect(contentWrapper?.hasAttribute?.('hidden')).toEqual(true);
     });
+    it('uses default element selection.', () => {
+        const accordion: HTMLElement = createAccordionElement();
+        const madeAccessibleAccordion: HTMLElement = makeAccessibleAccordion(accordion);
+        const contentWrapperElement: Element | null = accordion.querySelector(AccordionElementSelectorSet.DEFAULT_CONTENT_WRAPPER_SELECTOR);
+        expect(contentWrapperElement).not.toBeNull();
+        expect(contentWrapperElement?.getAttribute?.('role')).toEqual('region');
+    });
  });
 
  describe('The createAccordionKeyboardNavigationKeyUpHandler function', () => {
@@ -193,7 +200,7 @@ import {
     const mockContentWrappeId: string = 'mock-content-wrapper';
     const mockAccordionHeadingText: string = 'mock-accordion-heading';
     const KEYUP: string = 'keyup';
-    const createAccordionElement: (accordionIndex?: number) => HTMLElement = (accordionIndex: number = 0) => {
+    const createAccordionElement: (accordionIndex?: number) => HTMLElement = (accordionIndex: number = 0): HTMLElement => {
         const accordionRootElement: HTMLElement = document.createElement('div');
         const level3Heading: HTMLElement = document.createElement('h3');
         const buttonElement: HTMLElement = document.createElement('button');
@@ -204,14 +211,16 @@ import {
         buttonElement.setAttribute('role', 'button');
         buttonElement.setAttribute('aria-controls', `${mockContentWrappeId}-${accordionIndex}`);
         buttonElement.setAttribute('aria-expanded', 'false');
+        buttonElement.textContent = 'Click me!';
         contentWrapperElement.setAttribute('id', `${mockContentWrappeId}-${accordionIndex}`);
+        contentWrapperElement.textContent = 'Some text content';
         level3Heading.appendChild(buttonElement);
         accordionRootElement.appendChild(level3Heading);
         accordionRootElement.appendChild(contentWrapperElement);
         return accordionRootElement;
     };
 
-    const createAccordionElementSet: (count: number) => HTMLElement = (count: number) => {
+    const createAccordionElementSet: (count: number) => HTMLElement = (count: number): HTMLElement => {
         const wrapper: HTMLElement = document.createElement('div');
         for (let i: number = 0; i < count; ++i) {
             const accordion: HTMLElement = createAccordionElement(i);
@@ -324,63 +333,64 @@ import {
         const focusHandlerCallSum: number = focusCallCounts.reduce((carry, current) => carry + current, 0);
         expect(EXPECTED_FOCUS_CALL_COUNT).toEqual(focusHandlerCallSum);
     });
-    // it('returns a function that focuses the first accordion toggle when the Home button is pressed.', () => {
-    //     const accordionCount: number = 3;
-    //     const accordionSet: HTMLElement = createAccordionElementSet(accordionCount);
-    //     const selectors: AccordionElementSelectorSet = new AccordionElementSelectorSet(
-    //         ':scope > div > h3 > button',
-    //         ':scope > div > div',
-    //     );
-    //     const keyUpHandler: (e: KeyboardEvent) => void = createAccordionKeyboardNavigationKeyUpHandler(
-    //         accordionSet,
-    //         selectors,
-    //     );
-    //     const toggleButtons: NodeList = accordionSet.querySelectorAll(selectors.toggleButtonSelector);
-    //     accordionSet.addEventListener(KEYUP, keyUpHandler as EventListenerOrEventListenerObject);
-        
-    //     expect(toggleButtons.length).toEqual(accordionCount);
-    //     const firstToggleButton: HTMLElement = toggleButtons[0] as HTMLElement;
-    //     const lastToggleButton: HTMLElement = toggleButtons[toggleButtons.length - 1] as HTMLElement;
-    //     const firstToggleFocusHandler: jest.Mock = jest.fn();
+    it('returns a function that focuses the first accordion toggle when the Home button is pressed.', () => {
+        const accordionCount: number = 3;
+        const accordionSet: HTMLElement = createAccordionElementSet(accordionCount);
+        const selectors: AccordionElementSelectorSet = new AccordionElementSelectorSet(
+            ':scope > div > h3 > button',
+            ':scope > div > div',
+        );
+        const keyUpHandler: (e: KeyboardEvent) => void = createAccordionKeyboardNavigationKeyUpHandler(
+            accordionSet,
+            selectors,
+        );
+        accordionSet.addEventListener(KEYUP, keyUpHandler as EventListenerOrEventListenerObject);
 
-    //     firstToggleButton.addEventListener('focus', firstToggleFocusHandler);
-    //     lastToggleButton.focus();
-        
-    //     const homeKeyEvent: KeyboardEvent = new KeyboardEvent(KEYUP, {
-    //         code: 'Home',
-    //         key: 'Home',
-    //         bubbles: true,
-    //     });
-    //     lastToggleButton.dispatchEvent(homeKeyEvent);
-    //     expect(firstToggleFocusHandler).toHaveBeenCalled();
-    // });
-    // it('returns a function that focuses the last accordion toggle when the End button is pressed.', () => {
-    //     const accordionCount: number = 3;
-    //     const accordionSet: HTMLElement = createAccordionElementSet(accordionCount);
-    //     const selectors: AccordionElementSelectorSet = new AccordionElementSelectorSet(
-    //         ':scope > div > h3 > button',
-    //         ':scope > div > div',
-    //     );
-    //     const keyUpHandler: (e: KeyboardEvent) => void = createAccordionKeyboardNavigationKeyUpHandler(
-    //         accordionSet,
-    //         selectors,
-    //     );
-    //     const toggleButtons: NodeList = accordionSet.querySelectorAll(selectors.toggleButtonSelector);
-    //     accordionSet.addEventListener(KEYUP, keyUpHandler as EventListenerOrEventListenerObject);
-        
-    //     expect(toggleButtons.length).toEqual(accordionCount);
-    //     const firstToggleButton: HTMLElement = toggleButtons[0] as HTMLElement;
-    //     const lastToggleButton: HTMLElement = toggleButtons[toggleButtons.length - 1] as HTMLElement;
-    //     const lastToggleFocusHandler: jest.Mock = jest.fn();
+        const toggleButtons: NodeList = accordionSet.querySelectorAll(selectors.toggleButtonSelector);
+        expect(toggleButtons.length).toEqual(accordionCount);
 
-    //     firstToggleButton.focus();
-    //     lastToggleButton.addEventListener('focus', lastToggleFocusHandler);
-    //     const endKeyEvent: KeyboardEvent = new KeyboardEvent(KEYUP, {
-    //         code: 'End',
-    //         key: 'End',
-    //         bubbles: true,
-    //     });
-    //     firstToggleButton.dispatchEvent(endKeyEvent);
-    //     expect(lastToggleFocusHandler).toHaveBeenCalled();
-    // });
+        const firstToggleButton: HTMLElement = toggleButtons.item(0) as HTMLElement;
+        const lastToggleButton: HTMLElement = toggleButtons.item(toggleButtons.length - 1) as HTMLElement;
+        const firstToggleFocusHandler: jest.Mock = jest.fn();
+
+        firstToggleButton.addEventListener('focus', firstToggleFocusHandler);
+        lastToggleButton.focus();
+        
+        const homeKeyEvent: KeyboardEvent = new KeyboardEvent(KEYUP, {
+            code: 'Home',
+            key: 'Home',
+            bubbles: true,
+        });
+        lastToggleButton.dispatchEvent(homeKeyEvent);
+        expect(firstToggleFocusHandler).toHaveBeenCalled();
+    });
+    it('returns a function that focuses the last accordion toggle when the End button is pressed.', () => {
+        const accordionCount: number = 3;
+        const accordionSet: HTMLElement = createAccordionElementSet(accordionCount);
+        const selectors: AccordionElementSelectorSet = new AccordionElementSelectorSet(
+            ':scope > div > h3 > button',
+            ':scope > div > div',
+        );
+        const keyUpHandler: (e: KeyboardEvent) => void = createAccordionKeyboardNavigationKeyUpHandler(
+            accordionSet,
+            selectors,
+        );
+        const toggleButtons: NodeList = accordionSet.querySelectorAll(selectors.toggleButtonSelector);
+        accordionSet.addEventListener(KEYUP, keyUpHandler as EventListenerOrEventListenerObject);
+        
+        expect(toggleButtons.length).toEqual(accordionCount);
+        const firstToggleButton: HTMLElement = toggleButtons[0] as HTMLElement;
+        const lastToggleButton: HTMLElement = toggleButtons[toggleButtons.length - 1] as HTMLElement;
+        const lastToggleFocusHandler: jest.Mock = jest.fn();
+
+        firstToggleButton.focus();
+        lastToggleButton.addEventListener('focus', lastToggleFocusHandler);
+        const endKeyEvent: KeyboardEvent = new KeyboardEvent(KEYUP, {
+            code: 'End',
+            key: 'End',
+            bubbles: true,
+        });
+        firstToggleButton.dispatchEvent(endKeyEvent);
+        expect(lastToggleFocusHandler).toHaveBeenCalled();
+    });
  });
