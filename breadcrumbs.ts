@@ -64,8 +64,7 @@ export function makeAccessibleBreadcrumbs(
         isLinkCurrentPage,
         labelViewModel,
     } = viewModel;
-    const navigationElementSelector: string = selectors.navigationSelector !== '' ? selectors.navigationSelector : '';
-    const navigationElement: Element | null = selectElementOrDefault(breadcrumbsElement, navigationElementSelector);
+    const navigationElement: Element | null = selectElementOrDefault(breadcrumbsElement, selectors.navigationSelector);
     const anchorElements: NodeList = breadcrumbsElement.querySelectorAll(selectors.anchorSelector);
 
     AccessibleElementLabelViewModel.applyAccessibleLabel(navigationElement as Element, labelViewModel);
