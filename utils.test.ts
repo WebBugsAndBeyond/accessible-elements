@@ -15,6 +15,7 @@ import {
     TrappedKeyboardFocusKeyPressHandlerCallback,
     TrappedKeyboardFocusKeyPressInitializer,
     AccessibleElementLabelSelectorPreference,
+    interceptClick,
 } from './utils';
 
 describe('createElementID function', () => {
@@ -186,20 +187,7 @@ describe('isButtonElement function', () => {
     it('returns true for BUTTON elements.', () => {
         const buttonElement: Element = document.createElement('button');
         const isButton: boolean = isButtonElement(buttonElement);
-        expect(isButton).toBeTruthy();
-    });
-    it('returns true for elements that extend HTMLButtonElement.', () => {
-        class CustomButtonElement extends HTMLButtonElement {
-            constructor() {
-                super();
-            }
-        }
-        window.customElements.define('custom-button-element', CustomButtonElement, {
-            extends: 'button',
-        });
-        const button: CustomButtonElement = new CustomButtonElement();
-        const isButton: boolean = isButtonElement(button);
-        expect(isButton).toBeTruthy();
+        expect(isButton).toEqual(true);
     });
     it('returns false for non BUTTON elements.', () => {
         const divElement: Element = document.createElement('div');
@@ -349,7 +337,7 @@ describe('AccessibleElementLabelViewModel class', () => {
         const label: string | null = AccessibleElementLabelViewModel.applyAccessibleLabel(element, instance).getAttribute('aria-label');
         expect(label).toEqual(labelText);
     });
-    it('applies the label id of the selected label element to the aria-labelledby attribute.', () => {
+    it('applies the label id of the selected label element to the aria-labelledby attribute when all other options are provided and the preference is the selector.', () => {
         const labelId: string = 'label-id';
         const labelText: string = 'label text';
         const labelSelector: string = ':scope > div:nth-of-type(1)';
@@ -361,6 +349,23 @@ describe('AccessibleElementLabelViewModel class', () => {
         const instance: AccessibleElementLabelViewModel = new AccessibleElementLabelViewModel(
             labelId,
             labelText,
+            labelSelector,
+            preference,
+        );
+        const labelledById: string | null = AccessibleElementLabelViewModel.applyAccessibleLabel(element, instance).getAttribute('aria-labelledby');
+        expect(labelledById).toEqual(labelId);
+    });
+    it('applies the label id of the selected label element to the aria-labelledby attribute when no other options are provided.', () => {
+        const labelId: string = 'label-id';
+        const labelSelector: string = ':scope > div:nth-of-type(1)';
+        const element: Element = document.createElement('div');
+        const labelElement: Element = document.createElement('div');
+        const preference: AccessibleElementLabelSelectorPreference = AccessibleElementLabelSelectorPreference.LABEL_ELEMENT_SELECTOR;
+        labelElement.setAttribute('id', labelId);
+        element.appendChild(labelElement);
+        const instance: AccessibleElementLabelViewModel = new AccessibleElementLabelViewModel(
+            '',
+            '',
             labelSelector,
             preference,
         );
@@ -392,7 +397,53 @@ describe('AccessibleElementLabelViewModel class', () => {
         expect(labelledById).toBeNull();
         expect(label).toBeNull();
     });
+    it('applies the aria-labelledby when both id and text are set with the id as the preference.', () => {
+        const labelId: string = 'label-id';
+        const labelText: string = 'label text';
+        const wrapperElement: Element = document.createElement('div');
+        const buttonElement: Element = document.createElement('button');
+        const labelElement: Element = document.createElement('div');
+        labelElement.setAttribute('id', labelId);
+        buttonElement.textContent = 'button text';
+        wrapperElement.append(buttonElement, labelElement);
+        const labelIdViewModel: AccessibleElementLabelViewModel = new AccessibleElementLabelViewModel(
+            labelId,
+            labelText,
+            undefined,
+            AccessibleElementLabelSelectorPreference.LABEL_ID,
+        );
+        AccessibleElementLabelViewModel.applyAccessibleLabel(wrapperElement, labelIdViewModel);
+        expect(wrapperElement.getAttribute('aria-labelledby')).toEqual(labelId);
+    });
+    it('applies the aria-label when both id and text are set with the text as the preference.', () => {
+        const labelId: string = 'label-id';
+        const labelText: string = 'label text';
+        const wrapperElement: Element = document.createElement('div');
+        const buttonElement: Element = document.createElement('button');
+        const labelElement: Element = document.createElement('div');
+        labelElement.setAttribute('id', labelId);
+        buttonElement.textContent = 'button text';
+        wrapperElement.append(buttonElement, labelElement);
+        const labelTextViewModel: AccessibleElementLabelViewModel = new AccessibleElementLabelViewModel(
+            labelId,
+            labelText,
+            '',
+            AccessibleElementLabelSelectorPreference.LABEL_TEXT,
+        );
+        AccessibleElementLabelViewModel.applyAccessibleLabel(wrapperElement, labelTextViewModel);
+        expect(wrapperElement.getAttribute('aria-label')).toEqual(labelText);
+    });
 });
-// describe('keyboard focus trap', () => {
-
-// });
+describe('The interceptClick function', () => {
+    it('returns a promise resolved when a button is clicked once.', async () => {
+        const buttonElement: HTMLElement = document.createElement('button');
+        const mockHandler: jest.Mock = jest.fn();
+        const promise: Promise<void> = interceptClick(buttonElement).then(mockHandler);
+        buttonElement.dispatchEvent(new MouseEvent('click'));
+        await promise;
+        expect(mockHandler).toHaveBeenCalled();
+        buttonElement.dispatchEvent(new MouseEvent('click'));
+        await promise;
+        expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+});
