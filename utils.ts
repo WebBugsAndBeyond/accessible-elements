@@ -69,9 +69,6 @@ export function isButtonElement(element: Element): boolean {
     if (element.tagName === 'BUTTON') {
         return true;
     }
-    if (element instanceof HTMLButtonElement) {
-        return true;
-    }
     return false;
 }
 
@@ -130,9 +127,9 @@ export enum AccessibleElementLabelSelectorPreference {
 
 export class AccessibleElementLabelViewModel {
     constructor(
-        public readonly labelId: string | undefined = undefined,
-        public readonly labelText: string | undefined = undefined,
-        public readonly labelElementSelector: string | undefined = undefined,
+        public readonly labelId: string = '',
+        public readonly labelText: string = '',
+        public readonly labelElementSelector: string = '',
         public readonly preference: AccessibleElementLabelSelectorPreference = AccessibleElementLabelSelectorPreference.LABEL_ID,
     ) {
         
@@ -140,10 +137,10 @@ export class AccessibleElementLabelViewModel {
 
     static applyAccessibleLabel(element: Element, viewModel: AccessibleElementLabelViewModel): Element {
         const { 
-            labelId = '', 
-            labelText = '', 
-            labelElementSelector = '', 
-            preference = AccessibleElementLabelSelectorPreference.LABEL_ID,
+            labelId, 
+            labelText, 
+            labelElementSelector, 
+            preference,
         } = viewModel;
         const assignByLabelId = (id: string = labelId) => {
             element.setAttribute('aria-labelledby', id);
@@ -168,16 +165,12 @@ export class AccessibleElementLabelViewModel {
                 assignByLabelText();
             } else if (preference === AccessibleElementLabelSelectorPreference.LABEL_ELEMENT_SELECTOR) {
                 assignLabelBySelector();
-            } else {
-                throw new TypeError(`Invalid preference value: ${preference}`);
             }
         } else if (labelId !== '' && labelText !== '') {
             if (preference === AccessibleElementLabelSelectorPreference.LABEL_ID) {
                 assignByLabelId();
             } else if (preference === AccessibleElementLabelSelectorPreference.LABEL_TEXT) {
                 assignByLabelText();
-            } else {
-                throw new TypeError(`Invalid preference indicator based on state of AccessibleElementLabelViewModel: ${preference}`);
             }
         } else if (labelId !== '') {
             assignByLabelId(labelId);
@@ -214,6 +207,36 @@ export type TrappedKeyboardFocusKeyPressInitializer = {
     onEscapeDialogClose?: AnyKindOfFunction;
     notifyCloseExternal: Promise<void>;
     notifyOpenExternal: Promise<void>;
+}
+
+
+export function interceptClick(element: HTMLElement): Promise<void> {
+    return new Promise((resolve: AnyKindOfFunction) => {
+        element.addEventListener('click', (e: MouseEvent) => {
+            resolve();
+        }, {
+            once: true,
+        });
+    });
+}
+
+export function createTrappedElementKeyboardFocusHandler(trappedKeyboardFocusState: TrappedKeyboardFocusState): (e: KeyboardEvent) => void {
+    return (event: KeyboardEvent) => {
+        const { key, shiftKey } = event;
+        if (key === 'Tab') {
+            const { currentlyFocusedElementIndex, focusableElements } = trappedKeyboardFocusState;
+            let nextIndex: number = currentlyFocusedElementIndex;
+            if (shiftKey) {
+                nextIndex = nextIndex > 0 ? nextIndex - 1 : focusableElements.length - 1;
+            } else {
+                nextIndex = nextIndex < (focusableElements.length - 1) ? nextIndex + 1 : 0;
+            }
+            focusableElements[nextIndex].focus();
+            trappedKeyboardFocusState.currentlyFocusedElementIndex = nextIndex;
+        } else if (key === 'Escape') {
+            trappedKeyboardFocusState.onCloseCallback();
+        }
+    };
 }
 
 export function trappedElementKeyboardFocusHandler(
@@ -257,8 +280,8 @@ export function createTrappedKeyboardFocusKeyPressHandler(
         onCloseCallback,
     };
 
-    const handler = trappedElementKeyboardFocusHandler.bind(null, state);
-    return handler as unknown as KeyEventCallback;
+    const handler = createTrappedElementKeyboardFocusHandler(state);
+    return handler as KeyEventCallback;
 }
 
 export function trapElementKeyboardFocus(
