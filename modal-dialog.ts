@@ -1,16 +1,22 @@
 import {
     AccessibleElementLabelViewModel,
     AnyKindOfFunction,
-    trapElementKeyboardFocus,
-    TrappedKeyboardFocusKeyPressInitializer,
+    applyDescribedBy,
+    filterOutNulls,
+    interceptClick,
+    queryChildren,
+    selectElementOrDefault,
 } from './utils';
+import { DispatchFocusInvoker, FocusInvoker, OpenCloseListener, trapElementKeyboardFocus, TrappedKeyboardFocusKeyPressInitializer } from './utils/keyboard-focus-trap';
 
 export class ModalDialogElementSelectors {
 
     constructor(
+        public readonly dialogElementSelector: string,
         public readonly dialogOpenElementSelector: string,
         public readonly dialogCloseElementSelector: string,
-        public readonly focusableElementsSelectors: string[] = [],
+        public readonly describedBySelector: string,
+        public readonly focusableElementsSelectors: string[],
     ) {
         
     }
@@ -18,36 +24,51 @@ export class ModalDialogElementSelectors {
 
 export class ModalDialogViewModel {
 
+    public static readonly DIALOG_ROLE_NAME: string = 'dialog';
+
     constructor(
         public readonly labelViewModel: AccessibleElementLabelViewModel,
         public readonly selectors: ModalDialogElementSelectors,
         public readonly onOpenCallback: AnyKindOfFunction,
         public readonly onCloseCallback: AnyKindOfFunction,
+        public readonly focusInvoker: FocusInvoker = new DispatchFocusInvoker(),
+        public readonly openCloseOnce: boolean = false,
+        public readonly initiallyFocusedElementIndex: number = 0,
     ) {
         
     }
 }
 
-export function makeAccessibleModalDialog(dialogElement: Element, viewModel: ModalDialogViewModel): Element {
-    const { selectors, labelViewModel, onCloseCallback } = viewModel;
-    const { dialogOpenElementSelector, dialogCloseElementSelector, focusableElementsSelectors } = selectors;
-    const interceptClick: (elementSelector: string) => Promise<void> = (elementSelector: string) => (new Promise((resolve: AnyKindOfFunction) => {
-        const element: HTMLElement = document.querySelector(elementSelector) as HTMLElement;
-        if (element) {
-            element.addEventListener('click', (e: MouseEvent) => {
-                resolve();
-            });
-        }
-    }));
-    
-    AccessibleElementLabelViewModel.applyAccessibleLabel(dialogElement, labelViewModel);
-    const initializer: TrappedKeyboardFocusKeyPressInitializer = {
+export function makeAccessibleModalDialog(
+    dialogElement: Element,
+    viewModel: ModalDialogViewModel,
+): Element {
+    const { 
+        selectors,
+        labelViewModel,
+        onCloseCallback,
+        openCloseOnce,
+        initiallyFocusedElementIndex,
+        focusInvoker,
+    } = viewModel;
+    const { 
+        dialogElementSelector,
+        dialogOpenElementSelector,
+        dialogCloseElementSelector,
         focusableElementsSelectors,
-        notifyCloseExternal: interceptClick(dialogCloseElementSelector),
-        notifyOpenExternal: interceptClick(dialogOpenElementSelector),
-        onEscapeDialogClose: onCloseCallback,
-    };
-    trapElementKeyboardFocus(dialogElement as HTMLElement, initializer);
-
+        describedBySelector,
+    } = selectors;
+    const dialogContainer: Element | null = selectElementOrDefault(dialogElement, dialogElementSelector);
+    if (dialogContainer !== null) {
+        const focusableElements: Element[] = filterOutNulls(queryChildren(dialogContainer, focusableElementsSelectors)) as Element[];
+        if (focusableElements.length !== focusableElementsSelectors.length) {
+            throw new Error('Dialog controls are not decendents of dialog role element.');
+        }
+        dialogContainer.setAttribute('role', ModalDialogViewModel.DIALOG_ROLE_NAME);
+        dialogContainer.setAttribute('aria-modal', 'true');
+        AccessibleElementLabelViewModel.applyAccessibleLabel(dialogElement, labelViewModel);
+        applyDescribedBy(dialogElement, describedBySelector);
+    }
+    
     return dialogElement;
 }
