@@ -1,3 +1,5 @@
+export type AnyKindOfFunction = (...args: any[]) => any;
+export type KeyEventCallback = (event: KeyboardEvent) => void;
 
 export function createElementID(prefix: string = '', suffix: string = ''): string {
     return [prefix, window.crypto.randomUUID(), suffix].join('');
@@ -74,7 +76,7 @@ export function isButtonElement(element: Element): boolean {
 
 export function selectElementOrDefault(
     rootElement: Element,
-    selector: string = '',
+    selector: string,
     defaultElement: Element | null = rootElement,
 ): Element | null {
     if (selector !== '') {
@@ -187,28 +189,6 @@ export class AccessibleElementLabelViewModel {
     }
 }
 
-export type AnyKindOfFunction = (...args: any[]) => any;
-
-export type TrappedKeyboardFocusState = {
-    focusableElements: HTMLElement[];
-    currentlyFocusedElementIndex: number;
-    onCloseCallback: AnyKindOfFunction;
-}
-
-export type TrappedKeyboardFocusKeyPressHandlerCallback = (
-    trappedKeyboardFocusState: TrappedKeyboardFocusState,
-    event: KeyboardEvent | undefined,
-) => void;
-
-export type KeyEventCallback = (event: KeyboardEvent) => void;
-
-export type TrappedKeyboardFocusKeyPressInitializer = {
-    focusableElementsSelectors: string[];
-    onEscapeDialogClose?: AnyKindOfFunction;
-    notifyCloseExternal: Promise<void>;
-    notifyOpenExternal: Promise<void>;
-}
-
 
 export function interceptClick(element: HTMLElement): Promise<void> {
     return new Promise((resolve: AnyKindOfFunction) => {
@@ -220,88 +200,39 @@ export function interceptClick(element: HTMLElement): Promise<void> {
     });
 }
 
-export function createTrappedElementKeyboardFocusHandler(trappedKeyboardFocusState: TrappedKeyboardFocusState): (e: KeyboardEvent) => void {
-    return (event: KeyboardEvent) => {
-        const { key, shiftKey } = event;
-        if (key === 'Tab') {
-            const { currentlyFocusedElementIndex, focusableElements } = trappedKeyboardFocusState;
-            let nextIndex: number = currentlyFocusedElementIndex;
-            if (shiftKey) {
-                nextIndex = nextIndex > 0 ? nextIndex - 1 : focusableElements.length - 1;
-            } else {
-                nextIndex = nextIndex < (focusableElements.length - 1) ? nextIndex + 1 : 0;
-            }
-            focusableElements[nextIndex].focus();
-            trappedKeyboardFocusState.currentlyFocusedElementIndex = nextIndex;
-        } else if (key === 'Escape') {
-            trappedKeyboardFocusState.onCloseCallback();
-        }
-    };
+export enum WrapAroundDirection {
+    NEXT,
+    PREVIOUS,
 }
 
-export function trappedElementKeyboardFocusHandler(
-    trappedKeyboardFocusState: TrappedKeyboardFocusState,
-    event: KeyboardEvent,
-): void {
-    const { key, shiftKey } = event;
-    if (key === 'Tab') {
-        const { currentlyFocusedElementIndex, focusableElements } = trappedKeyboardFocusState;
-        let nextIndex: number = currentlyFocusedElementIndex;
-        if (shiftKey) {
-            nextIndex = nextIndex > 0 ? nextIndex - 1 : focusableElements.length - 1;
+export function nextWrapAroundIndex<CollectionElementType>(
+    collection: CollectionElementType[],
+    currentIndex: number,
+    direction: WrapAroundDirection
+): number {
+    if (direction === WrapAroundDirection.NEXT) {
+        if (currentIndex < (collection.length - 1)) {
+            return currentIndex + 1;
         } else {
-            nextIndex = nextIndex < (focusableElements.length - 1) ? nextIndex + 1 : 0;
+            return 0;
         }
-        focusableElements[nextIndex].focus();
-        trappedKeyboardFocusState.currentlyFocusedElementIndex = nextIndex;
-    } else if (key === 'Escape') {
-        trappedKeyboardFocusState.onCloseCallback();
+    } else {
+        if (currentIndex > 0) {
+            return currentIndex - 1;
+        } else {
+            return collection.length - 1;
+        }
     }
 }
-
-export function createTrappedKeyboardFocusKeyPressHandler(
-    parentElement: HTMLElement,
-    focusableElementsSelectors: string[],
-    onCloseCallback: AnyKindOfFunction,
-): KeyEventCallback {
-
-    const focusableElements: HTMLElement[] = focusableElementsSelectors.reduce((carry: HTMLElement[], current: string): HTMLElement[] => {
-        const selected: NodeList = parentElement.querySelectorAll(current);
-        if (selected.length > 0) {
-            const selectedArray: HTMLElement[] = Array.from(selected) as HTMLElement[];
-            return [...carry, ...selectedArray];
-        }
-        return carry;
-    }, [] as HTMLElement[]);
-
-    const state: TrappedKeyboardFocusState = {
-        focusableElements: focusableElements,
-        currentlyFocusedElementIndex: 0,
-        onCloseCallback,
-    };
-
-    const handler = createTrappedElementKeyboardFocusHandler(state);
-    return handler as KeyEventCallback;
+export function queryChildren(parentElement: Element, selectors: string[]): (Element | null)[] {
+    const elements: (Element | null)[] = selectors.map((selector: string) => {
+        const element: Element | null = parentElement.querySelector(selector);
+        return element;
+    });
+    return elements;
 }
 
-export function trapElementKeyboardFocus(
-    parentElement: HTMLElement,
-    initializer: TrappedKeyboardFocusKeyPressInitializer,
-): HTMLElement {
-    const { notifyCloseExternal, notifyOpenExternal , focusableElementsSelectors } = initializer;
-    const addKeyUpListener: AnyKindOfFunction = () => {
-        parentElement.removeEventListener('keyup', keyUpListener);
-    };
-    const removeKeyUpListener: AnyKindOfFunction = () => {
-        parentElement.removeEventListener('keyup', keyUpListener);
-    };
-    const keyUpListener = createTrappedKeyboardFocusKeyPressHandler(
-        parentElement,
-        focusableElementsSelectors,
-        removeKeyUpListener,
-    );
-    
-    notifyOpenExternal.then(addKeyUpListener);
-    notifyCloseExternal.then(removeKeyUpListener);
-    return parentElement;
+export function filterOutNulls<T>(collection: T[]): T[] {
+    const filtered: T[] = collection.filter((item: T) => !!item);
+    return filtered;
 }

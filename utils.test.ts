@@ -8,14 +8,12 @@ import {
     windowLocationIncludesUrl,
     applyDescribedBy,
     AccessibleElementLabelViewModel,
-    trappedElementKeyboardFocusHandler,
-    createTrappedKeyboardFocusKeyPressHandler,
-    trapElementKeyboardFocus,
-    TrappedKeyboardFocusState,
-    TrappedKeyboardFocusKeyPressHandlerCallback,
-    TrappedKeyboardFocusKeyPressInitializer,
     AccessibleElementLabelSelectorPreference,
     interceptClick,
+    WrapAroundDirection,
+    nextWrapAroundIndex,
+    queryChildren,
+    filterOutNulls,
 } from './utils';
 
 describe('createElementID function', () => {
@@ -445,5 +443,98 @@ describe('The interceptClick function', () => {
         buttonElement.dispatchEvent(new MouseEvent('click'));
         await promise;
         expect(mockHandler).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('The nextWrapAroundIndex function', () => {
+
+    const collection: string[] = ['First', 'Next', 'Last'];
+
+    it('returns the next index through entire collection.', () => {
+        expect(collection.length).toBeGreaterThan(1);
+        for (let i: number = 0; i < collection.length - 1; ++i) {
+            const nextIndex: number = nextWrapAroundIndex(collection, i, WrapAroundDirection.NEXT);
+            expect(nextIndex).toEqual(i + 1);
+        }
+    });
+    it('returns the wrap around to zero index after the last index.', () => {
+        const currentIndex: number = collection.length - 1;
+        const expectedIndex: number = 0;
+        const nextIndex: number = nextWrapAroundIndex(collection, currentIndex, WrapAroundDirection.NEXT);
+        expect(nextIndex).toEqual(expectedIndex);
+    });
+    it('returns the previous index through the entire collection from the end.', () => {
+        expect(collection.length).toBeGreaterThan(1);
+        for (let i: number = collection.length; i > 0; --i) {
+            const previousIndex: number = nextWrapAroundIndex(collection, i, WrapAroundDirection.PREVIOUS);
+            const expectedIndex: number = i - 1;
+            expect(previousIndex).toEqual(expectedIndex);
+        }
+    });
+    it('returns the wrap around to length-1 index before the first index.', () => {
+        expect(collection.length).toBeGreaterThan(1);
+        const currentIndex: number = 0;
+        const previousIndex: number = nextWrapAroundIndex(collection, currentIndex, WrapAroundDirection.PREVIOUS);
+        const expectedIndex: number = collection.length - 1;
+    });
+});
+describe('The queryChildren function', () => {
+    it('returns an array of elements that are found.', () => {
+        const baseElement: Element = document.createElement('div');
+        const buttonElements: Element[] = ['First', 'Middle', 'Last'].map((text: string) => {
+            const buttonElement: Element = document.createElement('button');
+            buttonElement.textContent = text;
+            return buttonElement;
+        });
+        baseElement.append(...buttonElements);
+        const selectors: string[] = [
+            ':scope > button:nth-of-type(1)',
+            ':scope > button:nth-of-type(2)',
+            ':scope > button:nth-of-type(3)',
+        ];
+        const selectedElements: (Element | null)[] = queryChildren(baseElement, selectors);
+        expect(selectedElements.length).toEqual(buttonElements.length);
+        expect(buttonElements.every((button: Element) => selectedElements.includes(button))).toEqual(true);
+        expect(selectedElements.every((selected: Element | null) => selected !== null)).toEqual(true);
+    });
+    it('returns an array of nulls for selecting elements that are not present.', () => {
+        const baseElement: Element = document.createElement('div');
+        const buttonElements: Element[] = ['First', 'Middle', 'Last'].map((text: string) => {
+            const buttonElement: Element = document.createElement('button');
+            buttonElement.textContent = text;
+            return buttonElement;
+        });
+        baseElement.append(...buttonElements);
+        const selectors: string[] = [
+            ':scope > a:nth-of-type(1)',
+            ':scope > p:nth-of-type(2)',
+            ':scope > section:nth-of-type(3)',
+        ];
+        const selectedElements: (Element | null)[] = queryChildren(baseElement, selectors);
+        expect(selectedElements.length).toEqual(selectors.length);
+        expect(selectedElements.every((element: Element | null) => element === null)).toEqual(true);
+    });
+});
+
+describe('The filterOutNulls function', () => {
+    it('removes all null elements from an array.', () => {
+        const elements = [{}, null, {}, null, null, {}];
+        const notNullCount: number = 3;
+        const nullCount: number = 3;
+        const elementCount: number = notNullCount + nullCount;
+        const filteredCount: number = elementCount - nullCount;
+        const filteredElements = filterOutNulls(elements);
+        expect(filteredElements.length).toEqual(filteredCount);
+        expect(filteredElements.every((element) => element !== null)).toEqual(true);
+
+    });
+    it('persists non-null elements from an array.', () => {
+        const elements = [{}, null, {}, null, null, {}];
+        const notNullCount: number = 3;
+        const nullCount: number = 3;
+        const elementCount: number = notNullCount + nullCount;
+        const filteredCount: number = elementCount - nullCount;
+        const filteredElements = filterOutNulls(elements);
+        expect(filteredElements.length).toEqual(notNullCount);
     });
 });
