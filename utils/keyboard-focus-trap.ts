@@ -33,6 +33,24 @@ export class DispatchFocusInvoker extends FocusInvoker {
     }
 }
 
+export abstract class ClickInvoker {
+    public abstract invokeClick(element: HTMLElement): void;
+}
+
+export class MethodClickInvoker extends ClickInvoker {
+    public invokeClick(element: HTMLElement): void {
+        element.click();
+    }
+}
+
+export class DispatchClickInvoker extends ClickInvoker {
+    public invokeClick(element: HTMLElement): void {
+        element.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+        }));
+    }
+}
+
 export class TrappedKeyboardFocusState {
 
     public constructor(

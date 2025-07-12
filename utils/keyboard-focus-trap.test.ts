@@ -1,5 +1,5 @@
 import { AnyKindOfFunction, KeyEventCallback } from '../utils';
-import { createTrappedElementKeyboardFocusHandler, DispatchFocusInvoker, FocusChange, FocusInvoker, MethodFocusInvoker, OpenCloseListener, trapElementKeyboardFocus, TrappedKeyboardFocusKeyPressInitializer, TrappedKeyboardFocusState } from './keyboard-focus-trap';
+import { ClickInvoker, createTrappedElementKeyboardFocusHandler, DispatchClickInvoker, DispatchFocusInvoker, FocusChange, FocusInvoker, MethodClickInvoker, MethodFocusInvoker, OpenCloseListener, trapElementKeyboardFocus, TrappedKeyboardFocusKeyPressInitializer, TrappedKeyboardFocusState } from './keyboard-focus-trap';
 
 describe('The TrappedKeyboardFocusState class', () => {
 
@@ -124,6 +124,28 @@ describe('The DispatchFocusInvoker class', () => {
         const invoker: FocusInvoker = new DispatchFocusInvoker();
         invoker.invokeFocus(element);
         expect(focusHandler).toHaveBeenCalled();
+    });
+});
+
+describe('MethodClickInvoker', () => {
+    it('invokes the click method on an element.', () => {
+        const element: HTMLElement = document.createElement('button');
+        element.textContent = 'Test Button';
+        const clickSpy = jest.spyOn(element, "click");
+        const invoker: ClickInvoker = new MethodClickInvoker();
+        invoker.invokeClick(element);
+        expect(clickSpy).toHaveBeenCalled();
+    });
+});
+
+describe('DispatchClickInvoker', () => {
+    it('dispatches a click event on an element.', () => {
+        const element: HTMLElement = document.createElement('button');
+        element.textContent = 'Test Button';
+        const dispatchEventSpy = jest.spyOn(element, 'dispatchEvent');
+        const invoker: ClickInvoker = new DispatchClickInvoker();
+        invoker.invokeClick(element);
+        expect(dispatchEventSpy).toHaveBeenCalled();
     });
 });
 
