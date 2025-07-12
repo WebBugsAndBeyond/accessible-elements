@@ -1,5 +1,5 @@
 import { targetElementIsToggleButton } from "../utils/dom";
-import { createAccordionKeyboardNavigationKeyUpHandler, InteractiveAccessibleAccordionElement } from "./interactivity";
+import { applyAccessibleAccordionInteractivity, createAccordionKeyboardNavigationKeyUpHandler, InteractiveAccessibleAccordionElement } from "./interactivity";
 import { AccessibleAccordionElementViewModel, AccordionElementSelectorSet } from "./types";
 
 const mockToggleButtonId: string = 'mock-accordion-toggle-button';
@@ -283,3 +283,17 @@ describe('The createAccordionKeyboardNavigationKeyUpHandler function', () => {
     });
  });
 
+describe('applyAccessibleAccordionInteractivity function', () => {
+    it('initializes keyboard interactivty.', () => {
+        const element: HTMLElement = createAccordionElement();
+        const viewModel: AccessibleAccordionElementViewModel = AccessibleAccordionElementViewModel.createDefault();
+        const interactivity: InteractiveAccessibleAccordionElement = applyAccessibleAccordionInteractivity(
+            element,
+            viewModel,
+        );
+        expect(interactivity.interactivityState).not.toBeNull();
+        expect(interactivity.isEventHandlerAttached).toEqual(true);
+        expect(interactivity.removeEventHandler()).toEqual(true);
+        expect(interactivity.cleanupHandlerState()).toEqual(true);
+    });
+});

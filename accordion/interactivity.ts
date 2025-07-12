@@ -98,9 +98,12 @@ export class InteractiveAccessibleAccordionElement extends InteractiveAccessible
     }
 }
 
-// function applyAccessibleAccordionInteractivity(
-//     accordionElement: HTMLElement,
-//     messageBus: 
-// ): ElementInteractivityObserver {
-
-// }
+export function applyAccessibleAccordionInteractivity(
+    accordionElement: HTMLElement,
+    viewModel: AccessibleAccordionElementViewModel,
+): InteractiveAccessibleAccordionElement {
+    const interactivity: InteractiveAccessibleAccordionElement = new InteractiveAccessibleAccordionElement();
+    interactivity.initializeInteractiveState(accordionElement, viewModel);
+    interactivity.attachEventHandler();
+    return interactivity;
+}
