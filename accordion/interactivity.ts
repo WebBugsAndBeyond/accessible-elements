@@ -1,7 +1,5 @@
-import { ActionInvocationOption, createClickActionInvoker, createElementAction, createFocusActionInvoker, createKeyboardEventResponder, DOMActionInvoker, ElementActionAntecedent, KeyboardEventResponder, KeyboardEventResponderInit, KeyboardEventResponse } from "../base/events";
-import { AccessibleElementViewModel, InteractiveAccessibleElement, KeyEventCallback } from "../base/types";
-import { AnyKindOfFunction } from "../base/types";
-import { nextWrapAroundIndex, WrapAroundDirection } from "../utils/collections";
+
+import { InteractiveAccessibleElement } from "../base/types";
 import { targetElementIsToggleButton } from "../utils/dom";
 import { AccessibleAccordionElementViewModel, AccordionElementSelectorSet } from "./types";
 
