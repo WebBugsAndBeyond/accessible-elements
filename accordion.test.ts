@@ -11,11 +11,12 @@ import {
     it('has a toggle button selector string', () => {
         const mockToggleButtonSelectorString: string = 'mock toggle button selector string';
         const mockContentWrapperSelectorString: string = 'mock content wrapper selector string';
-
         const accordionElementSelectorSetInstance: AccordionElementSelectorSet = new AccordionElementSelectorSet(
             mockToggleButtonSelectorString,
             mockContentWrapperSelectorString,
         );
+        expect(accordionElementSelectorSetInstance.toggleButtonSelector).toBeDefined();
+        expect(typeof accordionElementSelectorSetInstance.toggleButtonSelector).toEqual('string');
         expect(accordionElementSelectorSetInstance.toggleButtonSelector).toEqual(mockToggleButtonSelectorString);
     });
     it('has a content wrapper selector string', () => {
@@ -194,7 +195,7 @@ import {
     });
  });
 
- describe('The createAccordionKeyboardNavigationKeyUpHandler function', () => {
+describe('The createAccordionKeyboardNavigationKeyUpHandler function', () => {
 
     const mockToggleButtonId: string = 'mock-accordion-toggle-button';
     const mockContentWrappeId: string = 'mock-content-wrapper';
