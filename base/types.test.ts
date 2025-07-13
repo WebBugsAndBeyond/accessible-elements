@@ -1,4 +1,4 @@
-import { AccessibleElementLabelViewModel, AccessibleElementLabelSelectorPreference, AccessibleElementSelectors, AccessibleElementViewModel } from "./types";
+import { AccessibleElementLabelViewModel, AccessibleElementLabelSelectorPreference, AccessibleElementSelectors, AccessibleElementViewModel, AccessibleElementDescriptionViewModel } from "./types";
 import { identityFunction } from "./types";
 
 describe('identityFunction', () => {
@@ -272,7 +272,7 @@ describe('AccessibleElementSelectors', () => {
     it('defines a static default accessible element selector string.', () => {
         expect(AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR).toBeDefined();
         expect(typeof AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR).toEqual('string');
-        expect(AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR).toEqual(':scope > div:nth-of-type(1)');
+        expect(AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR).toEqual('');
     });
     it('defines a queryRoot property string upon instantiation.', () => {
         const rootSelector: string = ':scope > div';
@@ -305,6 +305,12 @@ describe('AccessibleElementSelectors', () => {
         expect(typeof instance.accessibleElement).toEqual('string');
         expect(instance.accessibleElement).toStrictEqual(AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR);
     });
+    it('returns an instance with default values from its static factory.', () => {
+        const instance: AccessibleElementSelectors = AccessibleElementSelectors.createDefault();
+        expect(instance).toBeInstanceOf(AccessibleElementSelectors);
+        expect(instance.queryRoot).toEqual(AccessibleElementSelectors.DEFAULT_QUERY_ROOT_SELECTOR);
+        expect(instance.accessibleElement).toEqual(AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR);
+    });
 });
 
 describe('AccessibleElementViewModel', () => {
@@ -312,8 +318,9 @@ describe('AccessibleElementViewModel', () => {
         public constructor(
             selectors: AccessibleElementSelectors,
             labelViewModel: AccessibleElementLabelViewModel,
+            descriptionViewModel: AccessibleElementDescriptionViewModel,
         ) {
-            super(selectors, labelViewModel);
+            super(selectors, labelViewModel, descriptionViewModel);
         }
     }
 
@@ -325,7 +332,8 @@ describe('AccessibleElementViewModel', () => {
             elementSelector,
         );
         const labelModel: AccessibleElementLabelViewModel = AccessibleElementLabelViewModel.createDefault();
-        const model: ViewModel = new ViewModel(selectors, labelModel);
+        const descriptionViewModel: AccessibleElementDescriptionViewModel = AccessibleElementDescriptionViewModel.createDefault();
+        const model: ViewModel = new ViewModel(selectors, labelModel, descriptionViewModel);
         expect(model.selectors).toBeDefined();
         expect(model.selectors).toBeInstanceOf(AccessibleElementSelectors);
         expect(model.selectors).toBe(selectors);
@@ -338,9 +346,26 @@ describe('AccessibleElementViewModel', () => {
             elementSelector,
         );
         const labelModel: AccessibleElementLabelViewModel = AccessibleElementLabelViewModel.createDefault();
-        const model: ViewModel = new ViewModel(selectors, labelModel);
+        const descriptionViewModel: AccessibleElementDescriptionViewModel = AccessibleElementDescriptionViewModel.createDefault();
+        const model: ViewModel = new ViewModel(selectors, labelModel, descriptionViewModel);
         expect(model.labelViewModel).toBeDefined();
         expect(model.labelViewModel).toBeInstanceOf(AccessibleElementLabelViewModel);
         expect(model.labelViewModel).toBe(labelModel);
     });
+    it('defines a descriptionViewModel property upon instantiation.', () => {
+        const rootSelector: string = ':scope > div';
+        const elementSelector: string = ':scope > div > div';
+        const selectors: AccessibleElementSelectors = new AccessibleElementSelectors(
+            rootSelector,
+            elementSelector,
+        );
+        const labelModel: AccessibleElementLabelViewModel = AccessibleElementLabelViewModel.createDefault();
+        const descriptionViewModel: AccessibleElementDescriptionViewModel = AccessibleElementDescriptionViewModel.createDefault();
+        const model: ViewModel = new ViewModel(selectors, labelModel, descriptionViewModel);
+        expect(model.descriptionViewModel).toBeDefined();
+        expect(model.descriptionViewModel).toBeInstanceOf(AccessibleElementDescriptionViewModel);
+        expect(model.descriptionViewModel).toBe(descriptionViewModel);
+    });
+
+
 });

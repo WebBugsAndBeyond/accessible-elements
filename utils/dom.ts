@@ -1,10 +1,16 @@
 import { AnyKindOfFunction } from "../base/types";
 
-export function createElementID(prefix: string = '', suffix: string = ''): string {
+export function createElementID(
+    prefix: string = '',
+    suffix: string = '',
+): string {
     return [prefix, window.crypto.randomUUID(), suffix].join('');
 }
 
-export function ensureElementHasID(element: Element, idGenerator: (...args: string[]) => string = createElementID): string {
+export function ensureElementHasID(
+    element: Element,
+    idGenerator: (...args: string[]) => string = createElementID,
+): string {
     const elementID: string | null = element.getAttribute('id');
     if (!elementID) {
         const createdID: string = idGenerator();
@@ -14,7 +20,9 @@ export function ensureElementHasID(element: Element, idGenerator: (...args: stri
     return elementID;
 }
 
-export function targetElementIsToggleButton(eventTarget: EventTarget | null): boolean {
+export function targetElementIsToggleButton(
+    eventTarget: EventTarget | null,
+): boolean {
     const element: HTMLElement = eventTarget as HTMLElement;
     const isButton: boolean = element.getAttribute('role') === 'button';
     const isControl: boolean = element.hasAttribute('aria-controls');
@@ -22,7 +30,10 @@ export function targetElementIsToggleButton(eventTarget: EventTarget | null): bo
     return isButton && isControl && isExpandButton;
 }
 
-export function toggleExpandedHiddenState(toggleElement: HTMLElement, controlledElement: Element): void {
+export function toggleExpandedHiddenState(
+    toggleElement: HTMLElement,
+    controlledElement: Element,
+): void {
     toggleElement.addEventListener('click', () => {
         const expanded: string | null = toggleElement.getAttribute('aria-expanded');
         if (!expanded || expanded === 'false') {
@@ -81,14 +92,22 @@ export function isButtonElement(element: Element): boolean {
     return false;
 }
 
+/**
+ * Queries for a DOM Element instance using a provided selector string on a root element.
+ * A default element is returned if none is selected which defaults to the root element.
+ * @param rootElement Root DOM element from which to invoke querySelector.
+ * @param selector DOM query selector string.
+ * @param defaultElement Default DOM element to return if the selector returns null; defaults to rootElement.
+ * @returns The selected DOM element or the default.
+ */
 export function selectElementOrDefault(
     rootElement: Element,
     selector: string,
-    defaultElement: Element | null = rootElement,
-): Element | null {
+    defaultElement: Element = rootElement,
+): Element {
     if (selector !== '') {
         const selectedElement: Element | null = rootElement.querySelector(selector);
-        if (selectedElement) {
+        if (selectedElement !== null) {
             return selectedElement;
         }
     }
@@ -111,7 +130,10 @@ export function interceptClick(element: HTMLElement): Promise<void> {
     });
 }
 
-export function queryChildren(parentElement: Element, selectors: string[]): (Element | null)[] {
+export function queryChildren(
+    parentElement: Element,
+    selectors: string[],
+): (Element | null)[] {
     const elements: (Element | null)[] = selectors.map((selector: string) => {
         const element: Element | null = parentElement.querySelector(selector);
         return element;

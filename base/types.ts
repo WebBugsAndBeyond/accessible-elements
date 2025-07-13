@@ -61,6 +61,12 @@ export class AccessibleElementDescriptionViewModel {
 
     }
 
+    public static createDefault(): AccessibleElementDescriptionViewModel {
+        return new AccessibleElementDescriptionViewModel(
+            AccessibleElementDescriptionViewModel.DEFAULT_DESCRIBED_ELEMENT_SELECTOR,
+        );
+    }
+
     /**
      * Apply the state defined by the view model to a component DOM element.
      * @param rootElement The component DOM element for which to apply the view model state.
@@ -84,11 +90,11 @@ export class AccessibleElementDescriptionViewModel {
             // There is an element containging the description information.
             // Ensure there is an identifier, and an element to describe.
             const descriptionId: string = ensureElementHasID(descriptionElement);
-            const describedElement: Element | null = selectElementOrDefault(rootElement, describedElementSelector);
-            if (describedElement !== null) {
-                // Apply the ARIA description to the element.
-                describedElement.setAttribute('aria-describedby', descriptionId);
-            }
+            const describedElement: Element = selectElementOrDefault(rootElement, describedElementSelector);
+            
+            // Apply the ARIA description to the element.
+            describedElement.setAttribute('aria-describedby', descriptionId);
+            
         }
         return rootElement;
     }
@@ -234,7 +240,7 @@ export class AccessibleElementSelectors {
      * provided to be decorated with ARIA. An empty string is the default which indicates that the
      * Element instance itself is to serve as the root of the component DOM subtree from within the
      * accessible element can be identified for decoration.
-     * @default {""}
+     * @default ""
      */
     public static readonly DEFAULT_QUERY_ROOT_SELECTOR: string = '';
 
@@ -243,25 +249,31 @@ export class AccessibleElementSelectors {
      * The default value selects the first child <div> element.
      * @default {":scope > div:nth-of-type(1)"}
      */
-    public static readonly DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR: string = ':scope > div:nth-of-type(1)';
+    public static readonly DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR: string = '';
 
     public constructor(
 
         /**
          * DOM query selector string for identifying the component root element from which to select
          * the actual element to decorate with ARIA.
-         * @default {AccessibleElementSelectors.DEFAULT_QUERY_ROOT_SELECTOR}
+         * @default {AccessibleElementSelectors#DEFAULT_QUERY_ROOT_SELECTOR}
          */
         protected readonly queryRootSelector: string = AccessibleElementSelectors.DEFAULT_QUERY_ROOT_SELECTOR,
 
         /**
          * DOM query selector string for selecting the element within the root identifed by `queryRootSelector`
          * to decorate with ARIA.
-         * @default {AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR}
+         * @default {AccessibleElementSelectors#DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR}
          */
         protected readonly accessibleElementSelector: string = AccessibleElementSelectors.DEFAULT_ACCESSIBLE_ELEMENT_SELECTOR,
-    ) {
+    ) {}
 
+    /**
+     * Return a new instance with default property values.
+     * @returns 
+     */
+    public static createDefault(): AccessibleElementSelectors {
+        return new AccessibleElementSelectors();
     }
 
     public get queryRoot(): string {
@@ -280,9 +292,8 @@ export abstract class AccessibleElementViewModel<SelectorType extends Accessible
     protected constructor(
         public readonly selectors: SelectorType,
         public readonly labelViewModel: AccessibleElementLabelViewModel,
-    ) {
-
-    }
+        public readonly descriptionViewModel: AccessibleElementDescriptionViewModel = AccessibleElementDescriptionViewModel.createDefault(),
+    ) {}
 }
 
 export type AccessibleElementInteractivityPatternState<

@@ -262,12 +262,6 @@ describe('selectElementOrDefault function', () => {
         const selected: Element | null = selectElementOrDefault(element, selector);
         expect(selected).toBe(headingElement);
     });
-    it('returns null for a selector string that does not identify an element.', () => {
-        const element: Element = createElement();
-        const selector: string = 'main';
-        const selected: Element | null = selectElementOrDefault(element, selector, null);
-        expect(selected).toBeNull();
-    });
 });
 
 describe('windowLocationIncludesUrl function', () => {
