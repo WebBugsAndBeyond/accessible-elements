@@ -224,6 +224,7 @@ export function nextWrapAroundIndex<CollectionElementType>(
         }
     }
 }
+
 export function queryChildren(parentElement: Element, selectors: string[]): (Element | null)[] {
     const elements: (Element | null)[] = selectors.map((selector: string) => {
         const element: Element | null = parentElement.querySelector(selector);

@@ -1,3 +1,4 @@
+import { AccessibleElementDescriptionViewModel } from './base/types';
 import { AccessibleElementLabelViewModel, AccessibleElementViewModel, applyDescribedBy } from './utils';
 
 export class AlertDialogElementSelectorSet {
